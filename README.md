@@ -15,7 +15,7 @@
 |-----|---------|------|
 | ES_ENDPOINT | es:9200 | ES API in format hostname:port |
 | ES_REPO | default | ES snapshot repository to request |
-| ES_CLEAN_AFTER_DAYS | 7 | Clean snapshots after X days |
+| ES_CLEAN_AFTER_DAYS | 14 | Clean snapshots after X days |
 | ES_DRY_RUN | <empty> | When not null, dry run mode is enabled (no deletion occurs) |
 
 

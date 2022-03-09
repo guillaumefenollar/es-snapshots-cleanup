@@ -12,9 +12,9 @@ import (
 
 const (
 	// default values for configuration
-	defaultEndpoint       = "es6:9200"
+	defaultEndpoint       = "es:9200"
 	defaultRepo           = "default"
-	defaultCleanAfterDays = 7
+	defaultCleanAfterDays = 14
 	defaultDryRun         = false
 )
 
