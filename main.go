@@ -13,7 +13,7 @@ import (
 const (
 	// default values for configuration
 	defaultEndpoint       = "es:9200"
-	defaultRepo           = "default"
+	defaultRepo           = ""
 	defaultCleanAfterDays = 14
 	defaultDryRun         = false
 )
@@ -34,6 +34,8 @@ type Snapshot struct {
 	SuccessS string `json:"successful_shards"`
 	FailedS  string `json:"failed_shards"`
 }
+
+type RepoData map[string]interface{}
 
 func main() {
 	config, err := getEnv()
@@ -68,7 +70,15 @@ func getEnv() (*Config, error) {
 	}
 	if repo, set := os.LookupEnv("ES_REPO"); set {
 		config.repo = repo
+	} else {
+		discoveredRepo, err := discoverRepo(config)
+		if err != nil {
+			return nil, err
+		}
+		config.repo = discoveredRepo
 	}
+	fmt.Printf("Config is %+v\n", *config)
+
 	if cleanAfterDays, set := os.LookupEnv("ES_CLEAN_AFTER_DAYS"); set {
 		c, err := strconv.ParseInt(cleanAfterDays, 10, 16)
 		if err != nil {
@@ -88,6 +98,36 @@ func getEnv() (*Config, error) {
 		config.dryRun = true
 	}
 	return config, nil
+}
+
+func discoverRepo(config *Config) (string, error) {
+	resp, err := http.Get("http://" + config.endpoint + "/_snapshot/")
+	if err != nil {
+		return "", err
+	}
+	if resp.StatusCode != 200 {
+		return "", fmt.Errorf("query to elasticsearch returned status %d", resp.StatusCode)
+	}
+	defer resp.Body.Close()
+	body, err := io.ReadAll(resp.Body)
+	if err != nil {
+		return "", err
+	}
+	var detectedRepo RepoData
+	err = json.Unmarshal(body, &detectedRepo)
+	if err != nil {
+		return "", err
+	}
+	allRepos := []string{}
+	for r := range detectedRepo {
+		allRepos = append(allRepos, r)
+	}
+	if len(allRepos) == 0 {
+		return "", fmt.Errorf("not found any snapshot repo on endpoint = %v", config.endpoint)
+	}
+	foundRepo := allRepos[0]
+	fmt.Printf("Found first discovered snapshots repo %v on endpoint %v\n", foundRepo, config.endpoint)
+	return foundRepo, nil
 }
 
 func getSnaps(config *Config) ([]Snapshot, error) {

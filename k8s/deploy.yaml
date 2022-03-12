@@ -1,0 +1,40 @@
+apiVersion: batch/v1beta1
+kind: CronJob
+metadata:
+  labels:
+    app-type: cronjob
+    app: es-snapshot-cleanup
+  name: es-snapshot-cleanup
+spec:
+  concurrencyPolicy: Forbid
+  jobTemplate:
+    metadata:
+      labels:
+        app: es-snapshot-cleanup
+    spec:
+      template:
+        metadata:
+          labels:
+            app: es-snapshot-cleanup
+        spec:
+          containers:
+          - env:
+            - name: TZ
+              value: Pacific/Noumea
+            - name: ES_ENDPOINT
+              value: es6:9200
+            - name: ES_REPO
+              value: cephfs
+            - name: MAN
+              value: https://github.com/guillaumefenollar/es-snapshots-cleanup
+            image: novitnc/es-snapshot-cleanup
+            imagePullPolicy: Always
+            name: clean
+          dnsPolicy: ClusterFirst
+          serviceAccount: default
+          restartPolicy: Never
+  schedule: '5 16 * * *'
+  startingDeadlineSeconds: 600
+  successfulJobsHistoryLimit: 1
+  suspend: false
+
