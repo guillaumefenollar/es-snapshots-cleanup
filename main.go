@@ -38,7 +38,7 @@ type Snapshot struct {
 type RepoData map[string]interface{}
 
 func main() {
-	config, err := getEnv()
+	config, err := getConfig()
 	if err != nil {
 		fmt.Fprintf(os.Stderr, "Error during environment initialization : %v\n", err)
 	}
@@ -58,7 +58,7 @@ func main() {
 	}
 }
 
-func getEnv() (*Config, error) {
+func getConfig() (*Config, error) {
 	config := &Config{
 		endpoint:       defaultEndpoint,
 		repo:           defaultRepo,
